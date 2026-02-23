@@ -1,118 +1,154 @@
-let  interview = [];
+let interview = [];
 let rejected = [];
 
+const total = document.getElementById('total');
+const two = document.getElementById('two');
+const three = document.getElementById('three');
 
-let total = document.getElementById('total');
-let  two = document.getElementById('two');
-let three = document.getElementById('three');
+const allBtn = document.getElementById('all-btn');
+const allInterviewBtn = document.getElementById('all-interview-btn');
+const allRejectedBtn = document.getElementById('all-rejected-btn');
 
-const allBtn = document.getElementById ('all-btn')
-const allInterviewBtn = document.getElementById ('all-interview-btn')
-const allRejectedBtn = document.getElementById ('all-rejected-btn')
-    
 const cardSection = document.getElementById('cards'); 
-const  mainContainer =document.querySelector('main');
-const filterdSection = document.getElementById('filterd-section');
-
+const filterSection = document.getElementById('filtered-section');
+const mainContainer = document.querySelector('main');
 
 function calculateCount(){
-     total.innerText = cardSection.children.length
-     two.innerText = interview.length
-     three.innerText = rejected.length
+    total.innerText = cardSection.children.length + interview.length + rejected.length;
+    two.innerText = interview.length;
+    three.innerText = rejected.length;
 }
 
-calculateCount()
+calculateCount();
 
-
+// Toggle buttons
 function toggleStyle(id){
+    allBtn.classList.remove('bg-black','text-white');
+    allInterviewBtn.classList.remove('bg-black','text-white');
+    allRejectedBtn.classList.remove('bg-black','text-white');
 
-    // if any button has black then removed
-      allBtn.classList.remove('bg-[#3b82f6]','text-white')
-      allInterviewBtn.classList.remove('bg-[#f9f4f4]', 'text-white')
-       allRejectedBtn.classList.remove('bg-[#f9f4f4]', 'text-white')
-//   adding gray bg for current button
-       allBtn.classList.add('bg-gray-300','text-black')
-      allInterviewBtn.classList.add('bg-gray-300','text-black')
-      allRejectedBtn.classList.add('bg-gray-300','text-black')
-      
-          console.log(id);
-    
-      const selected = document.getElementById(id)
-      console.log(selected);
-       
-// adding black bg for current button
-      selected.classList.remove('bg-gray-300', 'text-black')
-      selected.classList.add('bg-black', 'text-white')
+    allBtn.classList.add('bg-[#f9f4f4]','text-black');
+    allInterviewBtn.classList.add('bg-[#f9f4f4]','text-black');
+    allRejectedBtn.classList.add('bg-[#f9f4f4]','text-black');
 
-      if(id =='all-interview-btn'){
-           cardSection.classList.add('hidden');
-             filterdSection.classList.remove('hidden')
-           
-      }
-      else if (id==  'all-btn'){
+    const selected = document.getElementById(id);
+    selected.classList.remove('bg-[#f9f4f4]','text-black');
+    selected.classList.add('bg-black','text-white');
+
+    if(id === 'all-btn'){
         cardSection.classList.remove('hidden');
-        filterdSection.classList.add('hidden')
-      }
+        filterSection.classList.add('hidden');
+    } else if(id === 'all-interview-btn'){
+        cardSection.classList.add('hidden');
+        filterSection.classList.remove('hidden');
+        renderInterview();
+    } else if(id === 'all-rejected-btn'){
+        cardSection.classList.add('hidden');
+        filterSection.classList.remove('hidden');
+        renderRejected();
+    }
 }
 
-mainContainer.addEventListener('click',function(event){
-      console.log(event.target.classList.contains('interview-btn'))  
+// Move card
+function moveCard(card, fromList, toList){
+    const mobile = card.querySelector('.mobile').innerText;
+    const react = card.querySelector('.react').innerText;
+    const light = card.querySelector('.light').innerText;
+    const water = card.querySelector('.water').innerText;
 
-    if(event.target.classList.contains('interview-btn') ){
-      const parentNode  = event.target.parentNode.parentNode
-      const mobile = parentNode.querySelector('.mobile').innerText;
-     const react = parentNode.querySelector('.react').innerText;
-     const light = parentNode.querySelector('.light').innerText;
-     const water = parentNode.querySelector('.water').innerText;
-     const status = parentNode.querySelector('.status').innerText;
-       
-        parentNode.querySelector('.status').innerText = 'Applied'
-
-
-       const  cardInfo = {mobile,
-        react,
-        light,
-        water,
-        status:'Applied'}
-
-      const mobileExits =  interview.find(item=> item.mobile == cardInfo.mobile)
-
-      parentNode.querySelector('.status').innerText = 'Applied'
-      if(!mobileExits){
-        interview.push(cardInfo)
-      }
-       renderInterview()
-       calculateCount()
+    // Remove from old list
+    if(fromList === 'cards'){
+        cardSection.removeChild(card);
+    } else if(fromList === 'interview'){
+        interview = interview.filter(item => item.mobile !== mobile);
+    } else if(fromList === 'rejected'){
+        rejected = rejected.filter(item => item.mobile !== mobile);
     }
+
+    // Add to new list
+    const obj = {mobile, react, light, water};
+    if(toList === 'interview'){
+        interview.push(obj);
+        renderInterview();
+    } else if(toList === 'rejected'){
+        rejected.push(obj);
+        renderRejected();
+    }
+
+    calculateCount();
+}
+
+// Main click listener
+mainContainer.addEventListener('click', function(event){
+    const card = event.target.closest('.card');
+    if(!card) return;
+
+    if(event.target.classList.contains('interview-btn')){
+        if(cardSection.contains(card)){
+            moveCard(card, 'cards', 'interview');
+        } else if(filterSection.contains(card)){
+            moveCard(card, 'rejected', 'interview');
+        }
+    } else if(event.target.classList.contains('rejected-btn')){
+        if(cardSection.contains(card)){
+            moveCard(card, 'cards', 'rejected');
+        } else if(filterSection.contains(card)){
+            moveCard(card, 'interview', 'rejected');
+        }
+    }
+});
+
+// Render functions
+function renderInterview(){
+    filterSection.innerHTML = '';
+    interview.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'card flex justify-between bg-[#fbf9f9]';
+        div.innerHTML = `
+            <div class="space-y-6 pl-4">
+                <div class="py-3">
+                    <p class="font-bold mobile">${item.mobile}</p>
+                    <p class="opacity-55 react">${item.react}</p>
+                </div>
+                <p class="opacity-55 light">${item.light}</p>
+                <div>
+                    <button class="bg-[#e0eaf5] py-2 px-5 rounded-[4px]">Interview</button>
+                    <br>
+                    <p class="mt-4 water">${item.water}</p>
+                </div>
+                <div class="pb-4">
+                    <button class="interview-btn border border-green-400 px-5 py-2 rounded-[4px]">Interview</button>
+                    <button class="rejected-btn border border-red-400 px-5 py-2 rounded-[4px]">Rejected</button>
+                </div>
+            </div>
+        `;
+        filterSection.appendChild(div);
     });
+}
 
-    function renderInterview(){
-              filterdSection.innerHTML = ''
-
-              for(let inte of interview){
-                console.log(inte)
-                let div = document.createElement('div');
-
-                div.className = 'card flex justify-between bg-[#fbf9f9]'
-                div.innerHTML = `
-                         <div class="space-y-6 pl-4">
-                       <div class="py-3 ">
-                         <p class="font-bold mobile">${inte.mobile}</p>
-                        <p class="opacity-55 react">Web Designer & Developer</p>
-                       </div>
-                       <p class="opacity-55 light">Los Angeles, CA• Part-time • $80,000 - $120,000</p>
-                       <div><button class="bg-[#e0eaf5] py-2 px-5 rounded-[4px]  hover:bg-gray-400 hover:text-white transition duration-300">${inte.status}</button>
-                        <br>
-                       <p class="mt-4 water">Create stunning web experiences for high-profile clients. Must have portfolio and experience with modern web design trends.</p>
-                    </div>
-                    <div class="pb-4">
-                        <button id="inter" class=" border border-green-400 px-5 py-2 rounded-[4px]  hover:bg-green-400 hover:text-white transition duration-300" ><span class="text-[#10b981] font-bold">Interview</span></button>
-                        <button id="rej" class="border border-red-400 px-5 py-2 rounded-[4px]  hover:bg-red-400 hover:text-white transition duration-300"><span class="text-[#ef4444] font-bold">Rejected</span></button>
-                    </div>
-                    </div>
-                    <div><button  class="px-6 my-4"><img src="Trash.png" alt="" srcset="" class="border border-black-0 rounded-full my-7 mr-5 "></button></div>
-
-                `
-                filterdSection.appendChild(div)
-              }
-    }
+function renderRejected(){
+    filterSection.innerHTML = '';
+    rejected.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'card flex justify-between bg-[#fbf9f9]';
+        div.innerHTML = `
+            <div class="space-y-6 pl-4">
+                <div class="py-3">
+                    <p class="font-bold mobile">${item.mobile}</p>
+                    <p class="opacity-55 react">${item.react}</p>
+                </div>
+                <p class="opacity-55 light">${item.light}</p>
+                <div>
+                    <button class="bg-[#e0eaf5] py-2 px-5 rounded-[4px]">Rejected</button>
+                    <br>
+                    <p class="mt-4 water">${item.water}</p>
+                </div>
+                <div class="pb-4">
+                    <button class="interview-btn border border-green-400 px-5 py-2 rounded-[4px]">Interview</button>
+                    <button class="rejected-btn border border-red-400 px-5 py-2 rounded-[4px]">Rejected</button>
+                </div>
+            </div>
+        `;
+        filterSection.appendChild(div);
+    });
+}
